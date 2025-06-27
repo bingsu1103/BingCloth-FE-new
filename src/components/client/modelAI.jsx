@@ -29,10 +29,10 @@ const ModelAI = () => {
   return (
     <>
       {/* Toggle Button */}
-      <div className="fixed bottom-4 right-4 z-50 cursor-pointer">
+      <div className="fixed bottom-4 right-4 z-50">
         {!isOpen && (
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition"
+            className="bg-indigo-600 cursor-pointer hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition"
             onClick={() => setIsOpen(true)}
             title="Chat với AI"
           >
