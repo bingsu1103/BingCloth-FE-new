@@ -29,7 +29,7 @@ const ModelAI = () => {
   return (
     <>
       {/* Toggle Button */}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50 cursor-pointer">
         {!isOpen && (
           <button
             className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg transition"
@@ -65,7 +65,7 @@ const ModelAI = () => {
                   <p className="font-bold text-sm">Hi! I'm AI in BingCloth Store</p>
                 </div>
                 <p className="text-gray-400 italic text-sm">
-                  Ask my anything about product...
+                  Ask me anything about product...
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {predefinedPrompts.map((text, i) => (
