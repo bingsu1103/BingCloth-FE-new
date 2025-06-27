@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+.hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.ant-modal-mask {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(0.1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+
+
+.app-blurred {
+    filter: blur(2px);
+    transition: filter 0.3s ease;
+}
+
+.bin:hover {
+    color: rgb(248, 12, 12);
+    cursor: pointer;
+}
