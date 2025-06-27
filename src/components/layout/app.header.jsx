@@ -5,7 +5,7 @@ import { UseCurrentApp } from "../context/app.context";
 import { fetchAccountAPI, logoutAPI } from "../../services/api.user";
 import { message } from 'antd';
 import { useEffect, useState } from "react";
-import CartDrawer from "../client/CartDrawer";
+import { CartDrawer } from "../client/CartDrawer";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdManageAccounts } from "react-icons/md";
 import { MdOutlineManageSearch } from "react-icons/md";
