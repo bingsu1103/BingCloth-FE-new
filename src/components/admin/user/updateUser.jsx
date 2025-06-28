@@ -97,7 +97,18 @@ const UpdateUser = ({ openUpdate, setOpenUpdate, id }) => {
                         label="Role"
                         name="role">
                         <Select
-                            disabled
+                            options={
+                                [
+                                    {
+                                        label: "USER",
+                                        value: 'user',
+                                    },
+                                    {
+                                        label: "ADMIN",
+                                        value: 'admin'
+                                    }
+                                ]
+                            }
                         >
                         </Select>
                     </Form.Item>

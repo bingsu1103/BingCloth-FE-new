@@ -2,11 +2,20 @@ import { Link, useNavigate } from 'react-router';
 import { Button, Checkbox, Form, Input, message } from 'antd';
 import { fetchAccountAPI, loginAPI } from '../../../services/api.user';
 import { UseCurrentApp } from '../../../components/context/app.context';
+import { useEffect, useRef } from 'react';
 const Login = () => {
     const navigate = useNavigate();
     const form = Form.useForm()[0];
+    const [loading, setLoading] = useState(false);
+    const inputRef = useRef(null);
+    const [loginFailed, setLoginFailed] = useState(false);
+    useEffect(() => {
+        inputRef.current?.focus();
+        setLoginFailed(false);
+    }, [loginFailed])
     const { setIsAuthenticated, setUser } = UseCurrentApp();
     const onFinish = async (values) => {
+        setLoading(true);
         const { email, password } = values;
         const res = await loginAPI(email, password);
         if (res?.data) {
@@ -19,8 +28,10 @@ const Login = () => {
         }
         else {
             message.error("Invalid email or wrong password");
-            form.resetFields()
+            form.resetFields();
+            setLoginFailed(true);
         }
+        setLoading(false);
     };
     const onFinishFailed = errorInfo => {
         console.log('Failed:', errorInfo);
@@ -48,7 +59,7 @@ const Login = () => {
                             name="email"
                             rules={[{ required: true, message: 'Please input your email!' }]}
                         >
-                            <Input />
+                            <Input ref={inputFef} />
                         </Form.Item>
 
                         <Form.Item
@@ -59,7 +70,7 @@ const Login = () => {
                             <Input.Password />
                         </Form.Item>
                         <div className='flex justify-center'>
-                            <Button className='' type="primary" htmlType="submit">
+                            <Button loading={loading} type="primary" htmlType="submit">
                                 <span>Submit</span>
                             </Button>
                         </div>

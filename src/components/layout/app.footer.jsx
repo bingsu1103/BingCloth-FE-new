@@ -45,7 +45,7 @@ const AppFooter = () => {
                 </div>
             </div>
             <div className='flex gap-2 justify-center'>
-                <footer class="footer sm:footer-horizontal footer-center bg-[#181818] text-base-content p-4">
+                <footer className="footer sm:footer-horizontal footer-center bg-[#181818] text-base-content p-4">
                     <aside>
                         <p>Copyright © {new Date().getFullYear()} - All right reserved by BingCloth Ltd</p>
                     </aside>

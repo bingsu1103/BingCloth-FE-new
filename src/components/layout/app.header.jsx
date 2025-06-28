@@ -45,12 +45,12 @@ const AppHeader = () => {
                 <div className="drawer sm:hidden">
                     <input id="my-drawer" type="checkbox" className="drawer-toggle" />
                     <div className="drawer-content">
-                        <label for="my-drawer" className="btn btn-primary drawer-button">
+                        <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
                             <GiHamburgerMenu className="text-2xl cursor-pointer" />
                         </label>
                     </div>
                     <div className="drawer-side">
-                        <label for="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
+                        <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
                         <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
                             <Link onClick={() => (document.getElementById("my-drawer").checked = false)} className="p-5 px-8 cursor-pointer" to='/'>Home</Link>
                             <Link onClick={() => (document.getElementById("my-drawer").checked = false)} className="p-5 px-8 cursor-pointer" to='/store'>Store</Link>
@@ -79,11 +79,11 @@ const AppHeader = () => {
                 </button>
 
                 <div className="dropdown dropdown-end">
-                    <div tabindex="0" role="button" className="btn m-1">
+                    <div tabIndex="0" role="button" className="btn m-1">
                         <FiUser className="text-2xl font-bold cursor-pointer md:hidden" />
                         <GiHamburgerMenu className="text-2xl cursor-pointer max-md:hidden" />
                     </div>
-                    <ul tabindex="0" className="dropdown-content menu bg-[#fff] rounded-box z-1 w-52 p-2 shadow-sm">
+                    <ul tabIndex="0" className="dropdown-content menu bg-[#fff] rounded-box z-1 w-52 p-2 shadow-sm">
                         {!isAuthenticated && <Link to='/register'><li tabIndex={0} onClick={() => document.activeElement.blur()} className="p-1 px-3 hover:bg-gray-300 font-[600]">Sign up</li></Link>}
                         {!isAuthenticated && <Link to='/login'><li tabIndex={0} onClick={() => document.activeElement.blur()} className="p-1 px-3 hover:bg-gray-300 font-[600]">Sign in</li></Link>}
                         {isAuthenticated && <Link to='/info' className="flex gap-1 items-center hover:bg-gray-300 font-[500] px-3">

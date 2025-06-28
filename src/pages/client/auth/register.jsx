@@ -2,9 +2,12 @@ import { Link, useNavigate } from 'react-router';
 import { Button, Form, Input, message } from 'antd';
 import { registerAPI } from '../../../services/api.user';
 import { createOrderAPI } from '../../../services/api.order';
+import { useState } from 'react';
 const Register = () => {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const onFinish = async (values) => {
+        setLoading(true);
         const { name, email, password, phone } = values;
         const res = await registerAPI(name, email, password, phone);
         const emptyOrder = await createOrderAPI("EMPTY-ORDER", { userInfo: res?.data?.user._id, total_amount: 0 })
@@ -15,6 +18,7 @@ const Register = () => {
         else {
             message.error("Register failed!");
         }
+        setLoading(false);
     };
     const onFinishFailed = errorInfo => {
         console.log('Failed:', errorInfo);
@@ -67,7 +71,7 @@ const Register = () => {
                             <Input />
                         </Form.Item>
                         <div className='flex justify-center'>
-                            <Button type="primary" htmlType="submit">
+                            <Button loading={loading} type="primary" htmlType="submit">
                                 <span>Submit</span>
                             </Button>
                         </div>
