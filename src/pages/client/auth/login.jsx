@@ -59,7 +59,7 @@ const Login = () => {
                             name="email"
                             rules={[{ required: true, message: 'Please input your email!' }]}
                         >
-                            <Input ref={inputFef} />
+                            <Input ref={inputRef} />
                         </Form.Item>
 
                         <Form.Item

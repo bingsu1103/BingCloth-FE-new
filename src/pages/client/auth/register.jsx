@@ -2,10 +2,14 @@ import { Link, useNavigate } from 'react-router';
 import { Button, Form, Input, message } from 'antd';
 import { registerAPI } from '../../../services/api.user';
 import { createOrderAPI } from '../../../services/api.order';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 const Register = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const inputRef = useRef(null);
+    useEffect(() => {
+        inputRef.current.focus();
+    }, [])
     const onFinish = async (values) => {
         setLoading(true);
         const { name, email, password, phone } = values;
@@ -44,7 +48,7 @@ const Register = () => {
                             name="name"
                             rules={[{ required: true, message: 'Please input your username!' }]}
                         >
-                            <Input />
+                            <Input ref={inputRef} />
                         </Form.Item>
 
                         <Form.Item
