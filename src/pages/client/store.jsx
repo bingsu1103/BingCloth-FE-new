@@ -50,11 +50,16 @@ const StorePage = () => {
                     </Dropdown>
                 </div>
                 <div className="max-md:hidden md:grid md:grid-cols-5 gap-4 md:w-[90%] mx-auto">
-                    <button onClick={() => setType("ALL")} className="bg-black text-white border border-white p-2">ALL</button>
-                    <button onClick={() => setType("ACCESSORIES")} className="bg-black text-white border border-white p-2">ACCESSORIES</button>
-                    <button onClick={() => setType("TROUSER")} className="bg-black text-white border border-white p-2">TROUSERS</button>
-                    <button onClick={() => setType("T-SHIRT")} className="bg-black text-white border border-white p-2">T-SHIRT</button>
-                    <button onClick={() => setType("SHIRT")} className="bg-black text-white border border-white p-2">SHIRT</button>
+                    <button onClick={() => setType("ALL")} className={`p-2 border w-full ${type === "ALL" ? "bg-white text-[#000]" : "bg-black text-white"
+                        }`}>ALL</button>
+                    <button onClick={() => setType("ACCESSORIES")} className={`p-2 border w-full ${type === "ACCESSORIES" ? "bg-white text-[#000]" : "bg-black text-white"
+                        }`}>ACCESSORIES</button>
+                    <button onClick={() => setType("TROUSER")} className={`p-2 border w-full ${type === "TROUSER" ? "bg-white text-[#000]" : "bg-black text-white"
+                        }`}>TROUSERS</button>
+                    <button onClick={() => setType("T-SHIRT")} className={`p-2 border w-full ${type === "T-SHIRT" ? "bg-white text-[#000]" : "bg-black text-white"
+                        }`}>T-SHIRT</button>
+                    <button onClick={() => setType("SHIRT")} className={`p-2 border w-full ${type === "SHIRT" ? "bg-white text-[#000]" : "bg-black text-white"
+                        }`}>SHIRT</button>
                 </div>
                 <div className="">
                     <CardItem type={type} />
