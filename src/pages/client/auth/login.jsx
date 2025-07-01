@@ -69,10 +69,11 @@ const Login = () => {
                         >
                             <Input.Password />
                         </Form.Item>
-                        <div className='flex justify-center'>
-                            <Button loading={loading} type="primary" htmlType="submit">
+                        <div className='flex justify-center max-sm:justify-between gap-5'>
+                            <Button loading={loading} className='' type="primary" htmlType="submit">
                                 <span>Submit</span>
                             </Button>
+                            <Link to='/forgotPassword' className='flex items-center'>Forgot password?</Link>
                         </div>
 
                         <div className='flex justify-center gap-2 p-4'>

@@ -9,8 +9,8 @@ const ProtectedRoute = (props) => {
         return (
             <Result
                 status={404}
-                title="Not login"
-                subTitle="Please login to use this service"
+                title={<span className="text-[#fff]">Not login</span>}
+                subTitle={<span className="text-[#fff]">Please login to use this service</span>}
                 extra={<Button type="primary"><Link to='/login'>Login</Link></Button>}
             >
             </Result>
@@ -23,9 +23,9 @@ const ProtectedRoute = (props) => {
             return (
                 <Result
                     status="403"
-                    title="403"
-                    subTitle="Sorry, you are not authorized to access this page."
-                    extra={<Button type="primary"><Link to='/login'>Back home</Link></Button>}
+                    title={<span className="text-[#fff]">Unauthorized</span>}
+                    subTitle={<span className="text-[#fff]">Sorry, you are not authorized to access this page</span>}
+                    extra={<Button type="primary"><Link to='/'>Back home</Link></Button>}
                 >
                 </Result>
             )

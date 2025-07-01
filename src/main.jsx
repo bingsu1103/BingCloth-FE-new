@@ -66,6 +66,14 @@ const router = createBrowserRouter(
           element: <MyOrderPage />
         },
         {
+          path: '/forgotPassword',
+          element: <ForgotPasswordPage />
+        },
+        {
+          path: '/reset-password',
+          element: <ResetPasswordPage />
+        },
+        {
           path: '/admin/manage-product',
           element: (
             <ProtectedRoute>

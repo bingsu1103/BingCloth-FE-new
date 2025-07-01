@@ -41,4 +41,16 @@ const deleteUserAPI = (id) => {
         data: { id }
     })
 }
-export { getAUserAPI, loginAPI, registerAPI, fetchAccountAPI, logoutAPI, getUserAPI, deleteUserAPI, createUserAPI, updateUserAPI }
+const forgotPasswordAPI = (email) => {
+    const urlBackend = "/v1/api/auth/forgotPassword";
+    return axios.post(urlBackend, { email })
+}
+const verifyOTPAPI = (email, otp) => {
+    const urlBackend = "/v1/api/auth/verifyOTP";
+    return axios.post(urlBackend, { email, otp });
+}
+const resetPasswordAPI = (email, newPassword) => {
+    const urlBackend = "/v1/api/auth/resetPassword";
+    return axios.post(urlBackend, { email, newPassword });
+}
+export { getAUserAPI, loginAPI, registerAPI, fetchAccountAPI, logoutAPI, getUserAPI, deleteUserAPI, createUserAPI, updateUserAPI, forgotPasswordAPI, verifyOTPAPI, resetPasswordAPI }
