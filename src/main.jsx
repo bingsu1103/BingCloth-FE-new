@@ -18,6 +18,8 @@ import AboutPage from './pages/client/about.jsx';
 import OrderSuccess from './pages/client/orderSuccess.jsx';
 import MyOrderPage from './pages/client/myOrder.jsx';
 import ProtectedRoute from './components/auth/auth.jsx';
+import ForgotPasswordPage from './pages/client/forgotPassword.jsx';
+import ResetPasswordPage from './pages/client/resetPassword.jsx';
 
 const router = createBrowserRouter(
   [
