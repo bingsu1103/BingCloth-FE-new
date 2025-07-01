@@ -71,7 +71,7 @@ const AppHeader = () => {
                 <div className="flex items-center">
                     {isAuthenticated && <div className="flex gap-3 max-lg:hidden items-center">
                         <FiUser className="text-2xl font-bold cursor-pointer" />
-                        && <span className="font-bold">{user.name}</span>
+                        <span className="font-bold">{user.name}</span>
                     </div>}
                 </div>
                 <button onClick={() => setOpen(true)}>

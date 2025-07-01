@@ -17,13 +17,13 @@ const AppFooter = () => {
                         <div>Company: Bing Cloth Ltd</div>
                         <div>Present: An Ngo</div>
                         <div>Address: 43 Tan Lap, Dong Hoa, Di An, Binh Duong</div>
-                        <div>Business registration number: 032-762-8312</div>
+                        <div>Business registration number: 999-999-9999</div>
                     </div>
                 </div>
                 <div className='flex flex-col gap-1 col-span-1'>
                     <ul> Contact
                         <li className='list-disc'>Phone: +84 775 510 335</li>
-                        <li className='list-disc'>Email: bingcloth@gmail.com</li>
+                        <li className='list-disc'>Email: clothbing@gmail.com</li>
                     </ul>
                 </div>
                 <div className='flex flex-col gap-1 col-span-1'>
