@@ -17,6 +17,7 @@ import CustomerServicePage from './pages/client/customerService.jsx';
 import AboutPage from './pages/client/about.jsx';
 import OrderSuccess from './pages/client/orderSuccess.jsx';
 import MyOrderPage from './pages/client/myOrder.jsx';
+import ProtectedRoute from './components/auth/auth.jsx';
 
 const router = createBrowserRouter(
   [
@@ -66,15 +67,27 @@ const router = createBrowserRouter(
         },
         {
           path: '/admin/manage-product',
-          element: <ProductManagePage />
+          element: (
+            <ProtectedRoute>
+              < ProductManagePage />
+            </ProtectedRoute>
+          )
         },
         {
           path: '/admin/manage-user',
-          element: <UserManagePage />
+          element: (
+            <ProtectedRoute>
+              <UserManagePage />
+            </ProtectedRoute>
+          )
         },
         {
           path: '/admin/manage-order',
-          element: <OrderManagePage />
+          element: (
+            <ProtectedRoute>
+              <OrderManagePage />
+            </ProtectedRoute>
+          )
         },
 
       ]
