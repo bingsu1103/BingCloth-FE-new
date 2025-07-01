@@ -43,7 +43,7 @@ const ModelAI = () => {
 
       {/* Chatbox */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 w-96 max-h-[80vh] bg-white rounded-xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden z-1001">
+        <div className="fixed bottom-4 right-4 w-90 max-h-[80vh] bg-white rounded-xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden z-1001">
           {/* Header */}
           <div className="bg-indigo-600 text-white px-4 py-2 flex items-center justify-between">
             <span className="font-semibold">Bingsu AI</span>

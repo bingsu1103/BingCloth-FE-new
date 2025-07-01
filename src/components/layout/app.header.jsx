@@ -69,10 +69,10 @@ const AppHeader = () => {
             </nav>
             <nav className="flex gap-5 justify-end p-3">
                 <div className="flex items-center">
-                    <div className="flex gap-3 max-lg:hidden items-center">
+                    {isAuthenticated && <div className="flex gap-3 max-lg:hidden items-center">
                         <FiUser className="text-2xl font-bold cursor-pointer" />
-                        {isAuthenticated && <span className="font-bold">{user.name}</span>}
-                    </div>
+                        && <span className="font-bold">{user.name}</span>
+                    </div>}
                 </div>
                 <button onClick={() => setOpen(true)}>
                     <IoCartOutline className="text-2xl cursor-pointer" />
