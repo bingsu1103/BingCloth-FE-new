@@ -49,8 +49,8 @@ const verifyOTPAPI = (email, otp) => {
     const urlBackend = "/v1/api/auth/verifyOTP";
     return axios.post(urlBackend, { email, otp });
 }
-const resetPasswordAPI = (email, newPassword) => {
+const resetPasswordAPI = (email, password) => {
     const urlBackend = "/v1/api/auth/resetPassword";
-    return axios.post(urlBackend, { email, newPassword });
+    return axios.post(urlBackend, { email, password });
 }
 export { getAUserAPI, loginAPI, registerAPI, fetchAccountAPI, logoutAPI, getUserAPI, deleteUserAPI, createUserAPI, updateUserAPI, forgotPasswordAPI, verifyOTPAPI, resetPasswordAPI }
