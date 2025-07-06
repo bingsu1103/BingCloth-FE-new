@@ -6,6 +6,7 @@ import { createShippingAPI } from "../../services/api.shipping";
 import { createPaymentAPI } from "../../services/api.payment";
 import { createOrderAPI, getOrderAPI, updateOrderAPI } from "../../services/api.order";
 import { updateProductAPI } from "../../services/api.product";
+import { createPaymentOnline } from "../../services/momo.service";
 
 const CheckOutPage = () => {
     const { isAuthenticated, user, cartUpdated } = UseCurrentApp();
@@ -38,10 +39,24 @@ const CheckOutPage = () => {
                             });
                         }
                     }
+
+                    if (targetOrder?.payment?.method === "momo" || targetOrder?.payment?.method === 'vnpay') {
+                        const data = { amount: targetOrder.total_amount, orderInfo: targetOrder.payment._id }
+                        const res = await createPaymentOnline(data);
+                        console.log(res);
+
+                        if (res.status === true) {
+                            window.location.href = `${res.payUrl}`;
+                        }
+                    }
+                    else {
+                        navigate('/order-success');
+                    }
+                    await refetchCart();
                 }
             }
-            await refetchCart();
-            navigate('/order-success');
+
+
         }
         else {
             message.error("You need to login to order")
@@ -192,12 +207,12 @@ const CheckOutPage = () => {
                 <div className="p-10 flex flex-col gap-5 col-span-3 max-xl:col-span-4">
                     {orderCart?.items?.map((item, index) => (
                         <div key={item._id || index} className="flex justify-between text-sm">
-                            <div className="relative">
+                            <div className="relative flex-1">
                                 <img className="rounded border-1" width={90} src={item.productInfo.images[0]} alt="" />
                                 <span className="text-center absolute top-[-5px] right-[-5px] w-5 h-5 rounded-full bg-[#707070] text-white">{item.quantity}</span>
                             </div>
-                            <div className="flex flex-col gap-2">
-                                <span>{item.productInfo?.name}</span>
+                            <div className="flex flex-col gap-2 flex-1">
+                                <span className="float-start">{item.productInfo?.name}</span>
                                 <span>{item.size}</span>
                             </div>
                             <span>{(item.price * item.quantity).toLocaleString()}đ</span>
