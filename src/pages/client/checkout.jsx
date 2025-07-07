@@ -148,7 +148,7 @@ const CheckOutPage = () => {
                         </div>
                         <div className="flex flex-col gap-4">
                             <label className="font-bold">Shipping method</label>
-                            <Form.Item name="unit" className="w-full" rules={[{ required: true, message: " " }]}>
+                            <Form.Item name="unit" className="w-full" rules={[{ required: true, message: "Require" }]}>
                                 <Radio.Group
                                     onChange={(e) => setSelectedShipping(e.target.value)}
                                     value={selectedShipping}
@@ -174,7 +174,7 @@ const CheckOutPage = () => {
                         </div>
                         <div className="flex flex-col gap-4">
                             <label htmlFor="" className="text-xl font-bold">Payment</label>
-                            <Form.Item name='method' rules={[{ required: true, message: " " }]}>
+                            <Form.Item name='method' rules={[{ required: true, message: "Require" }]}>
                                 <Radio.Group
                                     onChange={(e) => setSelectedPayment(e.target.value)}
                                     value={selectedPayment}
@@ -208,11 +208,11 @@ const CheckOutPage = () => {
                 <div className="p-10 flex flex-col gap-5 col-span-3 max-xl:col-span-4">
                     {orderCart?.items?.map((item, index) => (
                         <div key={item._id || index} className="flex justify-between text-sm">
-                            <div className="relative flex-1">
+                            <div className="relative">
                                 <img className="rounded border-1" width={90} src={item.productInfo.images[0]} alt="" />
                                 <span className="text-center absolute top-[-5px] right-[-5px] w-5 h-5 rounded-full bg-[#707070] text-white">{item.quantity}</span>
                             </div>
-                            <div className="flex flex-col gap-2 flex-1">
+                            <div className="flex flex-col gap-2">
                                 <span className="float-start">{item.productInfo?.name}</span>
                                 <span>{item.size}</span>
                             </div>
