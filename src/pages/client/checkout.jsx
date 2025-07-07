@@ -212,7 +212,7 @@ const CheckOutPage = () => {
                                 <img className="rounded border-1" width={90} src={item.productInfo.images[0]} alt="" />
                                 <span className="text-center absolute top-[-5px] right-[-5px] w-5 h-5 rounded-full bg-[#707070] text-white">{item.quantity}</span>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 w-full ml-12">
                                 <span className="float-start">{item.productInfo?.name}</span>
                                 <span>{item.size}</span>
                             </div>
