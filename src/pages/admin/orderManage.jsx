@@ -43,7 +43,8 @@ const OrderManagePage = () => {
                     phone: item.shipping?.phone || "N/A",
                     contact: item.shipping?.contact || "N/A",
                     unit: item?.shipping?.unit || "N/A",
-                    userInfo: item?.userInfo?._id
+                    userInfo: item?.userInfo?._id,
+                    payment: item?.payment?.status
                 }));
                 setDataSource(orders);
                 setOriginalData(orders);
@@ -102,6 +103,16 @@ const OrderManagePage = () => {
             title: "Status",
             dataIndex: "status",
             key: "status"
+        },
+        {
+            title: "Payment",
+            dataIndex: "payment",
+            key: "payment",
+            render: (value) => (
+                <span className="flex justify-center p-1 text-xs rounded-xl border-1 border-[#000]" style={{ backgroundColor: value === "paid" ? "#19F2B3" : "#FF4D4F" }}>
+                    {value || "unpaid"}
+                </span>
+            )
         },
         {
             title: "Unit",

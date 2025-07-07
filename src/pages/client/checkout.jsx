@@ -55,8 +55,9 @@ const CheckOutPage = () => {
                     await refetchCart();
                 }
             }
-
-
+            else{
+                message.error("You need to fill all the field");
+            }
         }
         else {
             message.error("You need to login to order")
@@ -130,24 +131,24 @@ const CheckOutPage = () => {
                                         size="large" placeholder='Country/Region' ></Select>
                                 </Form.Item>
                                 <div className="flex gap-4 w-full">
-                                    <Form.Item className="flex-1" name="first_name">
+                                    <Form.Item className="flex-1" name="first_name" rules={[{ required: true }]}>
                                         <Input className="font-bold" size="large" placeholder="First name" ></Input>
                                     </Form.Item>
-                                    <Form.Item className="flex-1" name="last_name">
+                                    <Form.Item className="flex-1" name="last_name" rules={[{ required: true }]}>
                                         <Input className="font-bold" size="large" placeholder="Last name" ></Input>
                                     </Form.Item>
                                 </div>
-                                <Form.Item name="address">
+                                <Form.Item name="address" rules={[{ required: true }]}>
                                     <Input size="large" placeholder="Address" ></Input>
                                 </Form.Item>
-                                <Form.Item name="phone">
+                                <Form.Item name="phone" rules={[{ required: true }]}>
                                     <Input size="large" placeholder="Phone" ></Input>
                                 </Form.Item>
                             </div>
                         </div>
                         <div className="flex flex-col gap-4">
                             <label className="font-bold">Shipping method</label>
-                            <Form.Item name="unit" className="w-full">
+                            <Form.Item name="unit" className="w-full" rules={[{ required: true }]}>
                                 <Radio.Group
                                     onChange={(e) => setSelectedShipping(e.target.value)}
                                     value={selectedShipping}
@@ -173,7 +174,7 @@ const CheckOutPage = () => {
                         </div>
                         <div className="flex flex-col gap-4">
                             <label htmlFor="" className="text-xl font-bold">Payment</label>
-                            <Form.Item name='method'>
+                            <Form.Item name='method' rules={[{ required: true }]}>
                                 <Radio.Group
                                     onChange={(e) => setSelectedPayment(e.target.value)}
                                     value={selectedPayment}
