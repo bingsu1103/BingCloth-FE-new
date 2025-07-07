@@ -89,14 +89,14 @@ const CheckOutPage = () => {
                         className="flex flex-col gap-4">
                         <div className="flex flex-col gap-4">
                             <label className="font-bold text-xl">Contact</label>
-                            <Form.Item name="contact">
+                            <Form.Item name="contact" rules={[{ required: true, message: " " }]}>
                                 <Input placeholder="Email" size="large" ></Input>
                             </Form.Item>
                         </div>
                         <div className="flex flex-col gap-4">
                             <label className="font-bold text-xl">Delivery</label>
                             <div>
-                                <Form.Item name="country">
+                                <Form.Item name="country" rules={[{ required: true, message: " " }]}>
                                     <Select
                                         options={[
                                             {
@@ -131,24 +131,24 @@ const CheckOutPage = () => {
                                         size="large" placeholder='Country/Region' ></Select>
                                 </Form.Item>
                                 <div className="flex gap-4 w-full">
-                                    <Form.Item className="flex-1" name="first_name" rules={[{ required: true }]}>
+                                    <Form.Item className="flex-1" name="first_name" rules={[{ required: true, message: " " }]}>
                                         <Input className="font-bold" size="large" placeholder="First name" ></Input>
                                     </Form.Item>
-                                    <Form.Item className="flex-1" name="last_name" rules={[{ required: true }]}>
+                                    <Form.Item className="flex-1" name="last_name" rules={[{ required: true, message: " " }]}>
                                         <Input className="font-bold" size="large" placeholder="Last name" ></Input>
                                     </Form.Item>
                                 </div>
-                                <Form.Item name="address" rules={[{ required: true }]}>
+                                <Form.Item name="address" rules={[{ required: true, message: " " }]}>
                                     <Input size="large" placeholder="Address" ></Input>
                                 </Form.Item>
-                                <Form.Item name="phone" rules={[{ required: true }]}>
+                                <Form.Item name="phone" rules={[{ required: true, message: " " }]}>
                                     <Input size="large" placeholder="Phone" ></Input>
                                 </Form.Item>
                             </div>
                         </div>
                         <div className="flex flex-col gap-4">
                             <label className="font-bold">Shipping method</label>
-                            <Form.Item name="unit" className="w-full" rules={[{ required: true }]}>
+                            <Form.Item name="unit" className="w-full" rules={[{ required: true, message: " " }]}>
                                 <Radio.Group
                                     onChange={(e) => setSelectedShipping(e.target.value)}
                                     value={selectedShipping}
@@ -174,7 +174,7 @@ const CheckOutPage = () => {
                         </div>
                         <div className="flex flex-col gap-4">
                             <label htmlFor="" className="text-xl font-bold">Payment</label>
-                            <Form.Item name='method' rules={[{ required: true }]}>
+                            <Form.Item name='method' rules={[{ required: true, message: " " }]}>
                                 <Radio.Group
                                     onChange={(e) => setSelectedPayment(e.target.value)}
                                     value={selectedPayment}
