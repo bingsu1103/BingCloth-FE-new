@@ -1,14 +1,17 @@
 # Project Name
+
 "ECommerce"
 
 ## ✨ Function
+
 - Sign up, sign in
-- Management 
+- Management
 - Searching, Filtering
 - Purchase
 - VNPay Payment
 
 ## 🛠 Technical
+
 - Frontend: React, TailwindCSS
 - Backend: Node.js, Express
 - Database: MongoDB, Mongoose
@@ -18,10 +21,19 @@
 
 - NGO GIA AN ---- Role: FE, BE
 
+## About
+
+ADMIN Account:
+
+email: admin@gmail.com
+password: 123456
+
 ## 📫 Contact
+
 Ngô Gia An - [ngogiaan11111@gmail.com](mailto:ngogiaan11111@gmail.com)
 
 ## 📜 Copyright
+
 Copyright (c) 2025 Ngo Gia An
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
