@@ -18,7 +18,7 @@ import { AiFillHeart } from "react-icons/ai";
 import { Rate, Carousel } from "antd";
 import SlickButtonFix from "../../components/client/slickButtonFix";
 
-const colorOption = ["#0000FF", "#808080", "#000000", "#FFFFFF"];
+const colorOption = ["#0000FF", "#808080", "#000", "#FFF"];
 
 const ViewDetailProductPage = () => {
   const [form] = Form.useForm();
@@ -33,7 +33,7 @@ const ViewDetailProductPage = () => {
     quantity: 1,
     price: 0,
     size: "S",
-    color: "#FFFFFF",
+    color: "#FFF",
   });
 
   // Formatter VND
@@ -68,36 +68,67 @@ const ViewDetailProductPage = () => {
         message.error("You need to login first");
         return;
       }
+      // Kiểm tra tồn kho
+      if (product.stock_quantity < item.quantity) {
+        message.error("Not enough stock");
+        return;
+      }
       const res = await getOrderAPI(user._id);
+      console.log("Result from getOrderAPI (first call):", res);
       const orders = res?.data || [];
       let cart = orders.find((order) => order.status === "none");
+      console.log("Cart after finding (initial):", cart);
 
       if (!cart) {
+        console.log("No existing cart found, creating empty order...");
         await createOrderAPI("EMPTY-ORDER", {
           userInfo: user._id,
           total_amount: 0,
         });
         const newRes = await getOrderAPI(user._id);
+        console.log(
+          "Result from getOrderAPI (after creating empty order):",
+          newRes
+        );
         cart = newRes?.data?.find((order) => order.status === "none");
+        console.log("Cart after creating empty order:", cart);
       }
 
       const orderID = cart?._id;
+      console.log("OrderID:", orderID);
+      // So sánh đúng id sản phẩm
       const existingItem = cart?.items?.find(
         (i) =>
-          (i.productInfo === item.productInfo ||
-            i.productInfo?._id === item.productInfo) &&
+          (i.productInfo?._id || i.productInfo) === product._id &&
           i.size === item.size &&
           i.color === item.color
       );
 
       if (existingItem) {
         const newQuantity = existingItem.quantity + item.quantity;
+        // Kiểm tra tồn kho khi cộng thêm
+        if (newQuantity > product.stock_quantity) {
+          message.error("Not enough stock");
+          return;
+        }
         await updateItemAPI({ id: existingItem._id, quantity: newQuantity });
       } else {
-        const itemRes = await createItemAPI(item);
+        // Truyền đúng dữ liệu khi tạo item
+        const itemPayload = {
+          productInfo: product._id,
+          quantity: item.quantity,
+          price: product.price,
+          size: item.size,
+          color: item.color,
+        };
+        console.log("Payload for createItemAPI:", itemPayload);
+        const itemRes = await createItemAPI(itemPayload);
+        console.log("Result from createItemAPI:", itemRes);
         const itemID = itemRes?.data?._id;
+        console.log("ItemID:", itemID);
 
         if (orderID && itemID) {
+          console.log("Order ID:", orderID, "Item ID:", itemID);
           await createOrderAPI("ADD-ITEM", {
             OrderID: orderID,
             arrItem: [itemID],
@@ -105,6 +136,8 @@ const ViewDetailProductPage = () => {
         }
       }
 
+      // Refetch lại giỏ hàng
+      await getOrderAPI(user._id);
       refetchCart?.();
       message.success("Add item to cart successfully!");
     } catch (error) {

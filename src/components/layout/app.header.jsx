@@ -13,6 +13,7 @@ import { message, Badge, Menu, Dropdown, Drawer } from "antd";
 import CartDrawer from "../client/cartDrawer";
 import { useCurrentApp } from "../context/app.context";
 import { fetchAccountAPI, logoutAPI } from "../../services/api.user";
+import { getOrderAPI } from "../../services/api.order";
 
 const navLinks = [
   { key: "home", label: <Link to="/">Home</Link> },
@@ -21,11 +22,12 @@ const navLinks = [
   { key: "service", label: <Link to="/service">Service</Link> },
 ];
 
-const AppHeader = ({ cartCount = 0 }) => {
+const AppHeader = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartQuantity, setCartQuantity] = useState(0);
 
-  const { setIsAuthenticated, isAuthenticated, user, setUser } =
+  const { setIsAuthenticated, isAuthenticated, user, setUser, cartUpdated } =
     useCurrentApp();
   const navigate = useNavigate();
 
@@ -35,6 +37,32 @@ const AppHeader = ({ cartCount = 0 }) => {
     if (drawerOpen) blurTarget.classList.add("app-blurred");
     else blurTarget.classList.remove("app-blurred");
   }, [drawerOpen]);
+
+  useEffect(() => {
+    const fetchCartQuantity = async () => {
+      if (isAuthenticated && user && user._id) {
+        try {
+          const res = await getOrderAPI(user._id);
+          if (res?.EC === 0 && Array.isArray(res.data)) {
+            const cartOrder = res.data.find((order) => order.status === "none");
+            const totalQuantity = cartOrder?.items.reduce(
+              (sum, item) => sum + item.quantity,
+              0
+            );
+            setCartQuantity(totalQuantity || 0);
+          } else {
+            setCartQuantity(0);
+          }
+        } catch (err) {
+          console.error("Error fetching cart quantity:", err);
+          setCartQuantity(0);
+        }
+      } else {
+        setCartQuantity(0);
+      }
+    };
+    fetchCartQuantity();
+  }, [isAuthenticated, user, cartUpdated]);
 
   const handleLogout = async () => {
     const res = await logoutAPI();
@@ -127,7 +155,7 @@ const AppHeader = ({ cartCount = 0 }) => {
           )}
 
           {/* Cart icon */}
-          <Badge count={cartCount} overflowCount={99} size="small">
+          <Badge count={cartQuantity} overflowCount={99} size="small">
             <ShoppingCart
               size={20}
               onClick={() => setDrawerOpen(true)}

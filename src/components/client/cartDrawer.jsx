@@ -19,29 +19,46 @@ const CartDrawer = ({ open, setOpen }) => {
     const fetchOrder = async () => {
       try {
         if (open && isAuthenticated && user && user._id) {
+          // Luôn refetch lại order mới nhất
           const res = await getOrderAPI(user._id);
           if (res?.EC === 0 && Array.isArray(res.data)) {
-            setCartItems(
-              res.data.find((order) => order.status === "none").items
-            );
+            const cartOrder = res.data.find((order) => order.status === "none");
+            setCartItems(cartOrder?.items || []); // Ensure cartItems is an array
           } else {
             setCartItems([]);
           }
+        } else {
+          setCartItems([]);
         }
       } catch (err) {
         console.error("Error fetching cart:", err);
+        setCartItems([]);
       }
     };
 
     fetchOrder();
-  }, [open, isAuthenticated, user]);
+    // Lắng nghe refetchCart để cập nhật lại khi có thay đổi
+  }, [open, isAuthenticated, user, refetchCart]);
 
   const handleQuantityChange = (value, _id) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item._id === _id ? { ...item, quantity: value } : item
-      )
-    );
+    // Tìm item cần cập nhật
+    const item = cartItems.find((i) => i._id === _id);
+    if (!item) return;
+    // Kiểm tra tồn kho
+    if (value > item.productInfo?.stock_quantity) {
+      message.error("Not enough stock");
+      return;
+    }
+    // Gọi API cập nhật số lượng
+    updateItemAPI({ id: _id, quantity: value })
+      .then(() => {
+        message.success("Quantity updated");
+        // Refetch lại giỏ hàng
+        refetchCart();
+      })
+      .catch(() => {
+        message.error("Failed to update quantity");
+      });
   };
 
   const handleCheckout = async () => {

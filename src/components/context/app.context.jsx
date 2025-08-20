@@ -35,8 +35,9 @@ export const AppContextProvider = ({ children }) => {
     if (user?._id) {
       try {
         const res = await getOrderAPI(user._id);
-        if (res?.EC === 0 && Array.isArray(res.data) && res.data[0]?.items) {
-          setCartItems(res.data[0].items);
+        if (res?.EC === 0 && Array.isArray(res.data)) {
+          const cartOrder = res.data.find((order) => order.status === "none");
+          setCartItems(cartOrder?.items || []);
           setCartUpdated((prev) => !prev);
         } else {
           setCartItems([]);

@@ -1,8 +1,8 @@
 import { Form, Input, Button } from "antd";
-import { askGemini } from "../../services/gemini.service";
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import binglogo from "../../assets/img/png/binglogo.jpg";
+import { askGemini } from "../../services/gemini.service";
 
 const ModelAI = () => {
   const [reply, setReply] = useState("");
@@ -24,7 +24,11 @@ const ModelAI = () => {
     }
   };
 
-  const predefinedPrompts = ["View products at store", "Hello", "Return Policy"];
+  const predefinedPrompts = [
+    "View products at store",
+    "Hello",
+    "Return Policy",
+  ];
 
   return (
     <>
@@ -61,8 +65,15 @@ const ModelAI = () => {
             ) : (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <img width={40} src={binglogo} alt="AI" className="rounded-full" />
-                  <p className="font-bold text-sm">Hi! I'm AI in BingCloth Store</p>
+                  <img
+                    width={40}
+                    src={binglogo}
+                    alt="AI"
+                    className="rounded-full"
+                  />
+                  <p className="font-bold text-sm">
+                    Hi! I'm AI in BingCloth Store
+                  </p>
                 </div>
                 <p className="text-gray-400 italic text-sm">
                   Ask me anything about product...
