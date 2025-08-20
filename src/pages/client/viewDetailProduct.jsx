@@ -202,13 +202,13 @@ const ViewDetailProductPage = () => {
             {/* Info strip dưới ảnh (tùy chọn) */}
             <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs md:text-sm">
               <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
-                Free ship đơn 500k
+                Free ship order 500k
               </div>
               <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
-                Đổi trả 7 ngày
+                7-day return
               </div>
               <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
-                Thanh toán an toàn
+                Security payment
               </div>
             </div>
           </div>
@@ -223,9 +223,6 @@ const ViewDetailProductPage = () => {
                   </h1>
                   <div className="mt-2 flex items-center gap-3">
                     <Rate disabled allowHalf defaultValue={4} />
-                    <span className="text-sm text-gray-500">
-                      (1.2k reviews)
-                    </span>
                   </div>
                   <div className="mt-3">
                     {product.stock_quantity > 0 ? (
@@ -255,7 +252,7 @@ const ViewDetailProductPage = () => {
 
               {/* Price */}
               <div className="mt-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 px-4 py-3">
-                <div className="text-gray-500 text-sm">Giá</div>
+                <div className="text-gray-500 text-sm">Price</div>
                 <div className="text-2xl md:text-3xl font-bold text-gray-900">
                   {fmtVND.format(product.price)}
                 </div>
@@ -273,7 +270,7 @@ const ViewDetailProductPage = () => {
                 <Form.Item
                   label={
                     <span className="font-semibold text-sm text-gray-800">
-                      Màu sắc
+                      Color
                     </span>
                   }
                   name="color"
@@ -315,7 +312,7 @@ const ViewDetailProductPage = () => {
                 <Form.Item
                   label={
                     <span className="font-semibold text-sm text-gray-800">
-                      Kích cỡ
+                      Size
                     </span>
                   }
                   name="size"
@@ -337,7 +334,7 @@ const ViewDetailProductPage = () => {
                 <Form.Item
                   label={
                     <span className="font-semibold text-sm text-gray-800">
-                      Số lượng
+                      Quantity
                     </span>
                   }
                   name="quantity"
@@ -358,7 +355,7 @@ const ViewDetailProductPage = () => {
                 {/* Total */}
                 <div className="mt-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 flex items-center justify-between">
                   <span className="text-base md:text-lg font-semibold text-gray-800">
-                    Tổng cộng
+                    Total
                   </span>
                   <span className="text-xl md:text-2xl font-bold text-gray-900">
                     {fmtVND.format((item.price || 0) * (item.quantity || 0))}
@@ -374,7 +371,7 @@ const ViewDetailProductPage = () => {
                     className="!h-12 !rounded-full !font-semibold"
                     style={{ backgroundColor: "#111827" }}
                   >
-                    Thêm vào giỏ
+                    Add to cart
                   </Button>
 
                   <Button
@@ -389,7 +386,7 @@ const ViewDetailProductPage = () => {
                     type="primary"
                     className="!h-12 !rounded-full !font-semibold"
                   >
-                    Mua ngay
+                    Buy now
                   </Button>
                 </div>
               </Form>
@@ -398,7 +395,7 @@ const ViewDetailProductPage = () => {
             {/* Mô tả / Chính sách (tùy chọn) */}
             <div className="mt-6 bg-white rounded-2xl shadow-md p-5 md:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Mô tả sản phẩm
+                Product description
               </h3>
               <p className="text-gray-600 leading-relaxed">
                 {product.description ||
@@ -406,12 +403,12 @@ const ViewDetailProductPage = () => {
               </p>
               <Divider className="my-6" />
               <h4 className="text-base font-semibold text-gray-900 mb-2">
-                Chính sách
+                Policy
               </h4>
               <ul className="list-disc list-inside text-gray-600 space-y-1">
-                <li>Miễn phí vận chuyển cho đơn từ 500.000đ</li>
-                <li>Đổi trả trong vòng 7 ngày nếu có lỗi nhà sản xuất</li>
-                <li>Hỗ trợ khách hàng 24/7</li>
+                <li>Free shipping on orders over 500,000₫</li>
+                <li>7-day return policy for manufacturer defects</li>
+                <li>24/7 customer support</li>
               </ul>
             </div>
           </div>
