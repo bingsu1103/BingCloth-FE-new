@@ -1,90 +1,100 @@
-import { Link, useNavigate } from 'react-router';
-import { Button, Checkbox, Form, Input, message } from 'antd';
-import { fetchAccountAPI, loginAPI } from '../../../services/api.user';
-import { UseCurrentApp } from '../../../components/context/app.context';
-import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from "react-router";
+import { Button, Checkbox, Form, Input, message } from "antd";
+import { fetchAccountAPI, loginAPI } from "../../../services/api.user";
+import { useCurrentApp } from "../../../components/context/app.context";
+import { useEffect, useRef, useState } from "react";
 const Login = () => {
-    const navigate = useNavigate();
-    const form = Form.useForm()[0];
-    const [loading, setLoading] = useState(false);
-    const inputRef = useRef(null);
-    const [loginFailed, setLoginFailed] = useState(false);
-    useEffect(() => {
-        inputRef.current?.focus();
-        setLoginFailed(false);
-    }, [loginFailed])
-    const { setIsAuthenticated, setUser } = UseCurrentApp();
-    const onFinish = async (values) => {
-        setLoading(true);
-        const { email, password } = values;
-        const res = await loginAPI(email, password);
-        if (res?.data) {
-            setIsAuthenticated(true);
-            setUser(res.data);
-            localStorage.setItem('accessToken', res.accessToken);
-            navigate("/");
-            await fetchAccountAPI();
-            message.success("Login successfully!");
-        }
-        else {
-            message.error("Invalid email or wrong password");
-            form.resetFields();
-            setLoginFailed(true);
-        }
-        setLoading(false);
-    };
-    const onFinishFailed = errorInfo => {
-        console.log('Failed:', errorInfo);
-        form.resetFields();
-    };
-    return (
-        <div className='min-h-screen bg-[#1D232A]'>
-            <div className='grid grid-cols-3 max-sm:grid-cols-1 max-xl:block max-xl:w-[60%] max-xl:m-auto max-sm:w-full p-8'>
-                <div className='max-lg:hidden'></div>
-                <div className='flex flex-col items-center border-2 rounded p-4 bg-[#fff]'>
-                    <label className='font-bold text-2xl pt-8 text-[#000]'>Login</label>
-                    <Form
-                        form={form}
-                        name="basic"
-                        labelCol={{ span: 6 }}
-                        wrapperCol={{ span: 16 }}
-                        style={{ maxWidth: 600, width: '100%', paddingTop: '50px' }}
-                        initialValues={{ remember: true }}
-                        onFinish={onFinish}
-                        onFinishFailed={onFinishFailed}
-                        autoComplete="off"
-                    >
-                        <Form.Item
-                            label={<span className='font-bold'>Email</span>}
-                            name="email"
-                            rules={[{ required: true, message: 'Please input your email!' }]}
-                        >
-                            <Input ref={inputRef} />
-                        </Form.Item>
+  const navigate = useNavigate();
+  const form = Form.useForm()[0];
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
+  const [loginFailed, setLoginFailed] = useState(false);
+  useEffect(() => {
+    inputRef.current?.focus();
+    setLoginFailed(false);
+  }, [loginFailed]);
+  const { setIsAuthenticated, setUser } = useCurrentApp();
+  const onFinish = async (values) => {
+    setLoading(true);
+    const { email, password } = values;
+    const res = await loginAPI(email, password);
+    if (res?.data) {
+      setIsAuthenticated(true);
+      setUser(res.data);
+      localStorage.setItem("accessToken", res.accessToken);
+      navigate("/");
+      await fetchAccountAPI();
+      message.success("Login successfully!");
+    } else {
+      message.error("Invalid email or wrong password");
+      form.resetFields();
+      setLoginFailed(true);
+    }
+    setLoading(false);
+  };
+  const onFinishFailed = (errorInfo) => {
+    console.log("Failed:", errorInfo);
+    form.resetFields();
+  };
+  return (
+    <div className="min-h-screen bg-[#1D232A]">
+      <div className="grid grid-cols-3 max-sm:grid-cols-1 max-xl:block max-xl:w-[60%] max-xl:m-auto max-sm:w-full p-8">
+        <div className="max-lg:hidden"></div>
+        <div className="flex flex-col items-center border-2 rounded p-4 bg-[#fff]">
+          <label className="font-bold text-2xl pt-8 text-[#000]">Login</label>
+          <Form
+            form={form}
+            name="basic"
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 16 }}
+            style={{ maxWidth: 600, width: "100%", paddingTop: "50px" }}
+            initialValues={{ remember: true }}
+            onFinish={onFinish}
+            onFinishFailed={onFinishFailed}
+            autoComplete="off"
+          >
+            <Form.Item
+              label={<span className="font-bold">Email</span>}
+              name="email"
+              rules={[{ required: true, message: "Please input your email!" }]}
+            >
+              <Input ref={inputRef} />
+            </Form.Item>
 
-                        <Form.Item
-                            label={<span className='font-bold'>Password</span>}
-                            name="password"
-                            rules={[{ required: true, message: 'Please input your password!' }]}
-                        >
-                            <Input.Password />
-                        </Form.Item>
-                        <div className='flex justify-center max-sm:justify-between gap-5'>
-                            <Button loading={loading} className='' type="primary" htmlType="submit">
-                                <span>Submit</span>
-                            </Button>
-                            <Link to='/forgotPassword' className='flex items-center'>Forgot password?</Link>
-                        </div>
-
-                        <div className='flex justify-center gap-2 p-4'>
-                            <span>Don't have an account?</span>
-                            <Link className="underline cursor-pointer" to='/register'>Sign up here</Link>
-                        </div>
-                    </Form>
-                </div>
-                <div className='max-lg:hidden'></div>
+            <Form.Item
+              label={<span className="font-bold">Password</span>}
+              name="password"
+              rules={[
+                { required: true, message: "Please input your password!" },
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <div className="flex justify-center max-sm:justify-between gap-5">
+              <Button
+                loading={loading}
+                className=""
+                type="primary"
+                htmlType="submit"
+              >
+                <span>Submit</span>
+              </Button>
+              <Link to="/forgotPassword" className="flex items-center">
+                Forgot password?
+              </Link>
             </div>
+
+            <div className="flex justify-center gap-2 p-4">
+              <span>Don't have an account?</span>
+              <Link className="underline cursor-pointer" to="/register">
+                Sign up here
+              </Link>
+            </div>
+          </Form>
         </div>
-    )
-}
+        <div className="max-lg:hidden"></div>
+      </div>
+    </div>
+  );
+};
 export default Login;

@@ -12,7 +12,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import { getAProductAPI } from "../../services/api.product";
 import { createOrderAPI, getOrderAPI } from "../../services/api.order";
-import { UseCurrentApp } from "../../components/context/app.context";
+import { useCurrentApp } from "../../components/context/app.context";
 import { createItemAPI, updateItemAPI } from "../../services/api.item";
 import { AiFillHeart } from "react-icons/ai";
 import { Rate, Carousel } from "antd";
@@ -25,7 +25,7 @@ const ViewDetailProductPage = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const navigate = useNavigate();
-  const { user, isAuthenticated, refetchCart } = UseCurrentApp();
+  const { user, isAuthenticated, refetchCart } = useCurrentApp();
   const [liked, setLiked] = useState(false);
 
   const [item, setItem] = useState({
