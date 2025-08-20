@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Modal, Spin } from "antd";
+import { Button, Modal, Spin } from "antd";
 import { FaArrowDownLong } from "react-icons/fa6";
 import { getProductAPI } from "../../services/api.product";
 
@@ -122,14 +122,11 @@ const CardItem = ({ type, minPrice, maxPrice }) => {
       </div>
 
       {visibleItems < filteredProducts.length && (
-        <div>
-          <button
-            onClick={handleLoadMore}
-            className="hover:bg-[#1778ffca] flex items-center gap-2 mt-5 bg-[#000] text-white border border-[#fff] font-bold cursor-pointer px-4 py-2 rounded"
-          >
+        <div className="mt-10">
+          <Button type="primary" onClick={handleLoadMore}>
             <span>More</span>
             <FaArrowDownLong width={100} />
-          </button>
+          </Button>
         </div>
       )}
     </div>
