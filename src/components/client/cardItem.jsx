@@ -4,7 +4,7 @@ import { Modal, Spin } from "antd";
 import { FaArrowDownLong } from "react-icons/fa6";
 import { getProductAPI } from "../../services/api.product";
 
-const CardItem = ({ type }) => {
+const CardItem = ({ type, minPrice, maxPrice }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [visibleItems, setVisibleItems] = useState(8);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,8 @@ const CardItem = ({ type }) => {
     return <p className="text-center">No products found.</p>;
   }
 
-  const filteredProducts =
+  // Lọc theo loại
+  const filteredByType =
     type && type !== "ALL"
       ? listProducts.filter(
           (item) =>
@@ -52,9 +53,17 @@ const CardItem = ({ type }) => {
         )
       : listProducts;
 
+  // Lọc theo giá (từ props minPrice/maxPrice)
+  const filteredProducts = filteredByType.filter((p) => {
+    const price = Number(p.price) || 0;
+    const okMin = typeof minPrice === "number" ? price >= minPrice : true;
+    const okMax = typeof maxPrice === "number" ? price <= maxPrice : true;
+    return okMin && okMax;
+  });
+
   return (
     <div className="flex flex-col items-center w-full md:p-20 max-md:p-12">
-      {/* Grid responsive, khoảng cách đều */}
+      {/* Grid responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 cursor-pointer gap-6 md:gap-8 w-full">
         {filteredProducts.slice(0, visibleItems).map((item) => (
           <article
@@ -82,7 +91,6 @@ const CardItem = ({ type }) => {
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
-                  // chiều cao tối thiểu tương ứng 2 dòng để các card bằng nhau
                   minHeight: "2.8rem",
                 }}
               >
