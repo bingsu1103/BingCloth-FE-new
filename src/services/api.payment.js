@@ -8,4 +8,5 @@ const updatePaymentAPI = (id) => {
   const urlBackend = "/v1/api/payment";
   return axios.put(urlBackend, { id, status: "paid" });
 };
+
 export { createPaymentAPI, updatePaymentAPI };

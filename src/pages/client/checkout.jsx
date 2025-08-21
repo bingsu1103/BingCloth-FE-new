@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useCurrentApp } from "../../components/context/app.context";
 import { useState } from "react";
 import { createShippingAPI } from "../../services/api.shipping";
-import { createPaymentAPI, updatePaymentAPI } from "../../services/api.payment";
+import { createPaymentAPI } from "../../services/api.payment";
 import { createOrderAPI, updateOrderAPI } from "../../services/api.order";
 import { updateProductAPI } from "../../services/api.product";
 import { createPaymentOnline } from "../../services/momo.service";
@@ -89,7 +89,6 @@ const CheckOutPage = () => {
         };
         const paySession = await createPaymentOnline(data);
         if (paySession?.status === true && paySession?.payUrl) {
-          await updatePaymentAPI(payRes.data._id);
           await refetchCart();
           window.location.href = paySession.payUrl;
           return;
