@@ -1,6 +1,6 @@
-import instance from "./axios.customize";
+import axios from "../services/axios.customize";
 const askGemini = async (prompt) => {
   const urlBackend = "/v1/api/ask";
-  return instance.post(urlBackend, { prompt });
+  return axios.post(urlBackend, { prompt });
 };
-export { askGemini };
+export default askGemini;

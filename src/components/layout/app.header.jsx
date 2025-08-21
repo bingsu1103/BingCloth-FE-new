@@ -13,7 +13,7 @@ import { message, Badge, Menu, Dropdown, Drawer } from "antd";
 import CartDrawer from "../client/cartDrawer";
 import { useCurrentApp } from "../context/app.context";
 import { fetchAccountAPI, logoutAPI } from "../../services/api.user";
-import { getOrderAPI } from "../../services/api.order";
+import { getCurrentOrderAPI } from "../../services/api.order";
 
 const navLinks = [
   { key: "home", label: <Link to="/">Home</Link> },
@@ -42,9 +42,9 @@ const AppHeader = () => {
     const fetchCartQuantity = async () => {
       if (isAuthenticated && user && user._id) {
         try {
-          const res = await getOrderAPI(user._id);
-          if (res?.EC === 0 && Array.isArray(res.data)) {
-            const cartOrder = res.data.find((order) => order.status === "none");
+          const res = await getCurrentOrderAPI(user._id);
+          if (res?.EC === 0) {
+            const cartOrder = res.data;
             const totalQuantity = cartOrder?.items.reduce(
               (sum, item) => sum + item.quantity,
               0

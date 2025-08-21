@@ -2,7 +2,7 @@ import { Form, Input, Button } from "antd";
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import binglogo from "../../assets/img/png/binglogo.jpg";
-import { askGemini } from "../../services/gemini.service";
+import askGemini from "../../services/gemini.service";
 
 const ModelAI = () => {
   const [reply, setReply] = useState("");

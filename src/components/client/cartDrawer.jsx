@@ -1,7 +1,7 @@
 import { Drawer, InputNumber, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { createOrderAPI, getOrderAPI } from "../../services/api.order";
+import { createOrderAPI, getCurrentOrderAPI } from "../../services/api.order";
 import { useCurrentApp } from "../context/app.context";
 import { deleteItemAPI, updateItemAPI } from "../../services/api.item";
 import { FaTrashCan } from "react-icons/fa6";
@@ -9,6 +9,7 @@ import { FaTrashCan } from "react-icons/fa6";
 const CartDrawer = ({ open, setOpen }) => {
   const { user, isAuthenticated, refetchCart } = useCurrentApp();
   const [cartItems, setCartItems] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
 
   const onClose = () => {
@@ -16,45 +17,60 @@ const CartDrawer = ({ open, setOpen }) => {
   };
 
   useEffect(() => {
-    const fetchOrder = async () => {
+    if (!open) return;
+    if (!isAuthenticated || !user?._id) {
+      setCartItems([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
       try {
-        if (open && isAuthenticated && user && user._id) {
-          // Luôn refetch lại order mới nhất
-          const res = await getOrderAPI(user._id);
-          if (res?.EC === 0 && Array.isArray(res.data)) {
-            const cartOrder = res.data.find((order) => order.status === "none");
-            setCartItems(cartOrder?.items || []); // Ensure cartItems is an array
-          } else {
-            setCartItems([]);
-          }
+        const res = await getCurrentOrderAPI(user._id);
+        if (res?.EC === 0) {
+          const cartOrder = res.data;
+          console.log("cart order", cartOrder);
+
+          if (!cancelled)
+            setCartItems(
+              Array.isArray(cartOrder?.items) ? cartOrder.items : []
+            );
         } else {
-          setCartItems([]);
+          if (!cancelled) setCartItems([]);
         }
       } catch (err) {
-        console.error("Error fetching cart:", err);
-        setCartItems([]);
+        console.error(err);
+        if (!cancelled) setCartItems([]);
       }
-    };
+    })();
 
-    fetchOrder();
-    // Lắng nghe refetchCart để cập nhật lại khi có thay đổi
-  }, [open, isAuthenticated, user, refetchCart]);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, isAuthenticated, user?._id, refreshKey]);
+
+  useEffect(() => {
+    console.log("cartItems updated", cartItems);
+  }, [cartItems]);
 
   const handleQuantityChange = (value, _id) => {
-    // Tìm item cần cập nhật
     const item = cartItems.find((i) => i._id === _id);
     if (!item) return;
-    // Kiểm tra tồn kho
     if (value > item.productInfo?.stock_quantity) {
       message.error("Not enough stock");
       return;
     }
-    // Gọi API cập nhật số lượng
+
+    // Update local state ngay lập tức để UI responsive
+    setCartItems((prev) =>
+      prev.map((i) => (i._id === _id ? { ...i, quantity: value } : i))
+    );
+
+    // Sau đó gọi API
     updateItemAPI({ id: _id, quantity: value })
       .then(() => {
-        message.success("Quantity updated");
-        // Refetch lại giỏ hàng
-        refetchCart();
+        refetchCart(); // sync lại từ server
       })
       .catch(() => {
         message.error("Failed to update quantity");
@@ -65,11 +81,11 @@ const CartDrawer = ({ open, setOpen }) => {
     try {
       for (const item of cartItems) {
         await updateItemAPI({ id: item._id, quantity: item.quantity });
-        const res = await getOrderAPI(user._id);
-        await createOrderAPI("UPDATE-TOTAL", { OrderID: res?.data[0]._id });
+        const res = await getCurrentOrderAPI(user._id);
+        await createOrderAPI("UPDATE-TOTAL", { OrderID: res?.data._id });
         refetchCart();
       }
-      message.success("Cart updated. Proceeding to checkout.");
+
       navigate("/checkout");
       setOpen(false);
     } catch (error) {
@@ -84,8 +100,8 @@ const CartDrawer = ({ open, setOpen }) => {
   );
   const handleDeleteItem = async (id) => {
     try {
-      const order = await getOrderAPI(user._id);
-      const currentOrder = order?.data?.[0];
+      const order = await getCurrentOrderAPI(user._id);
+      const currentOrder = order?.data;
       if (!currentOrder?._id) {
         return message.error("Order not found.");
       }

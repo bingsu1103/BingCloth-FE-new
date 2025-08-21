@@ -6,7 +6,7 @@ import {
   useCallback,
 } from "react";
 import { fetchAccountAPI } from "../../services/api.user";
-import { getOrderAPI } from "../../services/api.order";
+import { getCurrentOrderAPI } from "../../services/api.order";
 
 const AppContext = createContext(null);
 
@@ -30,13 +30,12 @@ export const AppContextProvider = ({ children }) => {
     fetchAccount();
   }, []);
 
-  // ✅ Stable refetchCart with useCallback
   const refetchCart = useCallback(async () => {
     if (user?._id) {
       try {
-        const res = await getOrderAPI(user._id);
-        if (res?.EC === 0 && Array.isArray(res.data)) {
-          const cartOrder = res.data.find((order) => order.status === "none");
+        const res = await getCurrentOrderAPI(user._id);
+        if (res?.EC === 0) {
+          const cartOrder = res.data;
           setCartItems(cartOrder?.items || []);
           setCartUpdated((prev) => !prev);
         } else {

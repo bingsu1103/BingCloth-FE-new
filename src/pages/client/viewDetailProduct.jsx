@@ -7,15 +7,16 @@ import {
   message,
   Divider,
   Tag,
+  Rate,
 } from "antd";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import { getAProductAPI } from "../../services/api.product";
-import { createOrderAPI, getOrderAPI } from "../../services/api.order";
+import { createOrderAPI, getCurrentOrderAPI } from "../../services/api.order";
 import { useCurrentApp } from "../../components/context/app.context";
 import { createItemAPI, updateItemAPI } from "../../services/api.item";
 import { AiFillHeart } from "react-icons/ai";
-import { Rate, Carousel } from "antd";
+import { Carousel } from "antd";
 import SlickButtonFix from "../../components/client/slickButtonFix";
 
 const colorOption = ["#0000FF", "#808080", "#000", "#FFF"];
@@ -23,9 +24,10 @@ const colorOption = ["#0000FF", "#808080", "#000", "#FFF"];
 const ViewDetailProductPage = () => {
   const [form] = Form.useForm();
   const { id } = useParams();
-  const [product, setProduct] = useState(null);
   const navigate = useNavigate();
   const { user, isAuthenticated, refetchCart } = useCurrentApp();
+
+  const [product, setProduct] = useState(null);
   const [liked, setLiked] = useState(false);
 
   const [item, setItem] = useState({
@@ -36,135 +38,48 @@ const ViewDetailProductPage = () => {
     color: "#FFF",
   });
 
-  // Formatter VND
+  // ---- Format tiền VND
   const fmtVND = useMemo(
     () =>
       new Intl.NumberFormat("vi-VN", {
         style: "currency",
         currency: "VND",
+        maximumFractionDigits: 0,
       }),
     []
   );
 
+  // ---- Helpers cập nhật form/state
   const handleChange = (field) => (value) => {
-    setItem((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setItem((prev) => ({ ...prev, [field]: value }));
     form.setFieldValue(field, value);
   };
 
   const handleColorClick = (color) => {
-    setItem((prev) => ({
-      ...prev,
-      color,
-    }));
+    setItem((prev) => ({ ...prev, color }));
     form.setFieldValue("color", color);
   };
 
-  const handleSubmit = async () => {
-    try {
-      if (!isAuthenticated) {
-        message.error("You need to login first");
-        return;
-      }
-      // Kiểm tra tồn kho
-      if (product.stock_quantity < item.quantity) {
-        message.error("Not enough stock");
-        return;
-      }
-      const res = await getOrderAPI(user._id);
-      console.log("Result from getOrderAPI (first call):", res);
-      const orders = res?.data || [];
-      let cart = orders.find((order) => order.status === "none");
-      console.log("Cart after finding (initial):", cart);
-
-      if (!cart) {
-        console.log("No existing cart found, creating empty order...");
-        await createOrderAPI("EMPTY-ORDER", {
-          userInfo: user._id,
-          total_amount: 0,
-        });
-        const newRes = await getOrderAPI(user._id);
-        console.log(
-          "Result from getOrderAPI (after creating empty order):",
-          newRes
-        );
-        cart = newRes?.data?.find((order) => order.status === "none");
-        console.log("Cart after creating empty order:", cart);
-      }
-
-      const orderID = cart?._id;
-      console.log("OrderID:", orderID);
-      // So sánh đúng id sản phẩm
-      const existingItem = cart?.items?.find(
-        (i) =>
-          (i.productInfo?._id || i.productInfo) === product._id &&
-          i.size === item.size &&
-          i.color === item.color
-      );
-
-      if (existingItem) {
-        const newQuantity = existingItem.quantity + item.quantity;
-        // Kiểm tra tồn kho khi cộng thêm
-        if (newQuantity > product.stock_quantity) {
-          message.error("Not enough stock");
-          return;
-        }
-        await updateItemAPI({ id: existingItem._id, quantity: newQuantity });
-      } else {
-        // Truyền đúng dữ liệu khi tạo item
-        const itemPayload = {
-          productInfo: product._id,
-          quantity: item.quantity,
-          price: product.price,
-          size: item.size,
-          color: item.color,
-        };
-        console.log("Payload for createItemAPI:", itemPayload);
-        const itemRes = await createItemAPI(itemPayload);
-        console.log("Result from createItemAPI:", itemRes);
-        const itemID = itemRes?.data?._id;
-        console.log("ItemID:", itemID);
-
-        if (orderID && itemID) {
-          console.log("Order ID:", orderID, "Item ID:", itemID);
-          await createOrderAPI("ADD-ITEM", {
-            OrderID: orderID,
-            arrItem: [itemID],
-          });
-        }
-      }
-
-      // Refetch lại giỏ hàng
-      await getOrderAPI(user._id);
-      refetchCart?.();
-      message.success("Add item to cart successfully!");
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      message.error("Add item to cart failed!");
-    }
-  };
-
+  // ---- Lấy product detail
   useEffect(() => {
-    const fetchProductDetail = async () => {
+    (async () => {
       try {
         const res = await getAProductAPI(id);
-        if (res && res.EC === 0) {
+        if (res?.EC === 0) {
           const prod = res.data;
           setProduct(prod);
-          setItem((prev) => ({
-            ...prev,
-            price: prod.price,
-          }));
+          setItem((prev) => ({ ...prev, price: Number(prod.price) || 0 }));
+        } else {
+          message.error("Không tải được thông tin sản phẩm");
         }
-      } catch (error) {
-        console.error("Error fetching product:", error);
+      } catch (e) {
+        console.error(e);
+        message.error("Lỗi tải sản phẩm");
       }
-    };
-    fetchProductDetail();
+    })();
   }, [id]);
 
+  // Sync form khi item đổi
   useEffect(() => {
     form.setFieldsValue({
       color: item.color,
@@ -172,6 +87,129 @@ const ViewDetailProductPage = () => {
       quantity: item.quantity,
     });
   }, [item, form]);
+
+  // ---------- CORE: đồng bộ item hiện tại vào Order & update total ----------
+  const upsertItemIntoOrder = async () => {
+    if (!isAuthenticated) {
+      message.error("You need to login first");
+      return null;
+    }
+    if (!product?._id) {
+      message.error("Product is not ready");
+      return null;
+    }
+
+    const qty = Number(item.quantity) || 0;
+    const stock = Number(product.stock_quantity) || 0;
+    const unitPrice = Number(product.price) || 0;
+
+    if (qty < 1) {
+      message.error("Quantity must be at least 1");
+      return null;
+    }
+    if (qty > stock) {
+      message.error("Not enough stock");
+      return null;
+    }
+
+    // 1) Lấy/khởi tạo order hiện tại
+    const res = await getCurrentOrderAPI(user._id);
+    let cart = res?.data;
+    if (!cart?._id) {
+      await createOrderAPI("EMPTY-ORDER", {
+        userInfo: user._id,
+        total_amount: 0,
+      });
+      const again = await getCurrentOrderAPI(user._id);
+      cart = again?.data;
+    }
+    const orderID = cart?._id;
+    if (!orderID) {
+      message.error("Cannot create/load current order");
+      return null;
+    }
+
+    // 2) Tìm item trùng (cùng product + size + color)
+    const existing = cart?.items?.find(
+      (i) =>
+        (i.productInfo?._id || i.productInfo) === product._id &&
+        i.size === item.size &&
+        (i.color || "").toLowerCase() === (item.color || "").toLowerCase()
+    );
+
+    if (existing) {
+      const newQty = Number(existing.quantity || 0) + qty;
+      if (newQty > stock) {
+        message.error("Not enough stock");
+        return null;
+      }
+      // luôn ghi lại price hiện tại để tính total đúng
+      await updateItemAPI({
+        id: existing._id,
+        quantity: newQty,
+        price: unitPrice,
+      });
+    } else {
+      const created = await createItemAPI({
+        productInfo: product._id,
+        quantity: qty,
+        price: unitPrice,
+        size: item.size,
+        color: item.color,
+      });
+      const itemID = created?.data?._id;
+      if (itemID) {
+        await createOrderAPI("ADD-ITEM", {
+          OrderID: orderID,
+          arrItem: [itemID],
+        });
+      } else {
+        message.error("Create item failed");
+        return null;
+      }
+    }
+
+    // 3) Cập nhật tổng tiền theo giá hiện tại
+    await createOrderAPI("UPDATE-TOTAL", { OrderID: orderID });
+
+    return orderID;
+  };
+
+  // ---- Add to cart (submit form)
+  const handleAddToCart = async () => {
+    const hide = message.loading("Adding to cart...");
+    try {
+      const orderID = await upsertItemIntoOrder();
+      if (!orderID) return;
+      await refetchCart?.();
+      message.success("Added to cart!");
+    } catch (e) {
+      console.error(e);
+      message.error("Add to cart failed");
+    } finally {
+      hide();
+    }
+  };
+
+  // ---- Buy now
+  const handleBuyNow = async () => {
+    if (!isAuthenticated) {
+      message.error("You need to login first");
+      return;
+    }
+    const hide = message.loading("Preparing checkout...");
+    try {
+      const orderID = await upsertItemIntoOrder();
+      if (!orderID) return;
+      await refetchCart?.();
+      navigate("/checkout");
+    } catch (e) {
+      console.error(e);
+      message.error("Cannot proceed to checkout");
+    } finally {
+      hide();
+    }
+  };
 
   if (!product) {
     return (
@@ -184,7 +222,6 @@ const ViewDetailProductPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-        {/* Breadcrumb + Back (tùy chọn) */}
         <div className="mb-6 text-sm text-gray-500">
           <span
             className="hover:underline cursor-pointer"
@@ -232,7 +269,7 @@ const ViewDetailProductPage = () => {
                 />
               </div>
             )}
-            {/* Info strip dưới ảnh (tùy chọn) */}
+
             <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs md:text-sm">
               <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
                 Free ship order 500k
@@ -270,7 +307,6 @@ const ViewDetailProductPage = () => {
                   </div>
                 </div>
 
-                {/* Like */}
                 <AiFillHeart
                   onClick={() => setLiked(!liked)}
                   style={{
@@ -283,11 +319,10 @@ const ViewDetailProductPage = () => {
                 />
               </div>
 
-              {/* Price */}
               <div className="mt-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 px-4 py-3">
                 <div className="text-gray-500 text-sm">Price</div>
                 <div className="text-2xl md:text-3xl font-bold text-gray-900">
-                  {fmtVND.format(product.price)}
+                  {fmtVND.format(Number(product.price) || 0)}
                 </div>
               </div>
 
@@ -295,9 +330,9 @@ const ViewDetailProductPage = () => {
 
               <Form
                 form={form}
-                onFinish={handleSubmit}
                 layout="vertical"
                 requiredMark={false}
+                onFinish={handleAddToCart}
               >
                 {/* Color */}
                 <Form.Item
@@ -314,7 +349,8 @@ const ViewDetailProductPage = () => {
                   <div className="flex items-center gap-3">
                     {colorOption.map((color) => {
                       const isSelected =
-                        item.color?.toLowerCase() === color.toLowerCase();
+                        (item.color || "").toLowerCase() ===
+                        color.toLowerCase();
                       const isWhite =
                         color.toLowerCase() === "#ffffff" ||
                         color.toLowerCase() === "#fff";
@@ -331,7 +367,6 @@ const ViewDetailProductPage = () => {
                           style={{ backgroundColor: color }}
                           title={color}
                         >
-                          {/* Viền xám cho màu trắng để dễ thấy */}
                           {isWhite && !isSelected && (
                             <span className="block w-full h-full rounded-full border border-gray-300" />
                           )}
@@ -377,7 +412,7 @@ const ViewDetailProductPage = () => {
                 >
                   <InputNumber
                     min={1}
-                    max={product.stock_quantity}
+                    max={Number(product.stock_quantity) || 1}
                     value={item.quantity}
                     onChange={handleChange("quantity")}
                     className="w-40"
@@ -385,13 +420,15 @@ const ViewDetailProductPage = () => {
                   />
                 </Form.Item>
 
-                {/* Total */}
+                {/* Total (client-side) */}
                 <div className="mt-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 flex items-center justify-between">
                   <span className="text-base md:text-lg font-semibold text-gray-800">
                     Total
                   </span>
                   <span className="text-xl md:text-2xl font-bold text-gray-900">
-                    {fmtVND.format((item.price || 0) * (item.quantity || 0))}
+                    {fmtVND.format(
+                      (Number(item.price) || 0) * (Number(item.quantity) || 0)
+                    )}
                   </span>
                 </div>
 
@@ -408,13 +445,7 @@ const ViewDetailProductPage = () => {
                   </Button>
 
                   <Button
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        message.error("You need to login first");
-                        return;
-                      }
-                      navigate("/checkout");
-                    }}
+                    onClick={handleBuyNow}
                     size="large"
                     type="primary"
                     className="!h-12 !rounded-full !font-semibold"
@@ -425,7 +456,7 @@ const ViewDetailProductPage = () => {
               </Form>
             </div>
 
-            {/* Mô tả / Chính sách (tùy chọn) */}
+            {/* Mô tả/Chính sách */}
             <div className="mt-6 bg-white rounded-2xl shadow-md p-5 md:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
                 Product description

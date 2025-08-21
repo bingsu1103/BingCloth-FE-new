@@ -3,10 +3,10 @@ import { useNavigate } from "react-router";
 import { useCurrentApp } from "../../components/context/app.context";
 import { useState, useEffect } from "react";
 import { createShippingAPI } from "../../services/api.shipping";
-import { createPaymentAPI } from "../../services/api.payment";
+import { createPaymentAPI, updatePaymentAPI } from "../../services/api.payment";
 import {
   createOrderAPI,
-  getOrderAPI,
+  getCurrentOrderAPI,
   updateOrderAPI,
 } from "../../services/api.order";
 import { updateProductAPI } from "../../services/api.product";
@@ -19,71 +19,117 @@ const CheckOutPage = () => {
   const [form] = Form.useForm();
   const [orderCart, setOrderCart] = useState(null);
   const navigate = useNavigate();
-  const onFinish = async (values) => {
-    if (isAuthenticated) {
-      const order = await getOrderAPI(user._id);
-      const shipRes = await createShippingAPI(values);
-      const payRes = await createPaymentAPI(values);
-      if (shipRes && payRes) {
-        await createOrderAPI("ADD-SHIPPING", {
-          OrderID: order.data.find((order) => order.status === "none")._id,
-          shippingID: shipRes.data._id,
-        });
-        await createOrderAPI("ADD-PAYMENT", {
-          OrderID: order.data.find((order) => order.status === "none")._id,
-          paymentID: payRes.data._id,
-        });
-        const completeOrder = await getOrderAPI(user._id);
-        if (completeOrder && completeOrder.data) {
-          message.success("Ordered successfully!");
-          const targetOrder = completeOrder.data.find(
-            (order) => order.status === "none"
-          );
-          if (targetOrder) {
-            await updateOrderAPI({ id: targetOrder._id, status: "processing" });
-            for (const item of targetOrder.items) {
-              const currentQuantity = item.productInfo.stock_quantity;
-              const newQuantity = currentQuantity - item.quantity;
-              await updateProductAPI({
-                id: item.productInfo._id,
-                stock_quantity: newQuantity < 0 ? 0 : newQuantity,
-              });
-            }
-          }
+  const onFinish = async () => {
+    const values = await form.validateFields(); // đảm bảo đủ field
+    if (!isAuthenticated) {
+      message.error("Bạn cần đăng nhập để đặt hàng");
+      return navigate("/login");
+    }
 
-          if (
-            targetOrder?.payment?.method === "momo" ||
-            targetOrder?.payment?.method === "vnpay"
-          ) {
-            const data = {
-              amount: targetOrder.total_amount,
-              orderInfo: targetOrder.payment._id,
-            };
-            const res = await createPaymentOnline(data);
-            console.log(res);
+    const hide = message.loading("Đang xử lý đơn hàng...");
+    try {
+      // 1) Lấy đơn hiện tại
+      const orderRes = await getCurrentOrderAPI(user._id);
+      const orderId = orderRes?.data?._id;
+      if (!orderId) throw new Error("Không tìm thấy giỏ hàng/đơn hiện tại");
 
-            if (res.status === true) {
-              window.location.href = `${res.payUrl}`;
-            }
-          } else {
-            navigate("/order-success");
-          }
-          await refetchCart();
-        }
-      } else {
-        message.error("You need to fill all the field");
+      // 2) Tạo shipping + payment (song song)
+      const [shipRes, payRes] = await Promise.all([
+        createShippingAPI({
+          contact: values.contact,
+          country: values.country,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          address: values.address,
+          phone: values.phone,
+          unit: values.unit,
+        }),
+        createPaymentAPI({
+          method: values.method, // momo/vnpay/cash
+          // đưa thêm field cần thiết cho BE
+        }),
+      ]);
+
+      if (!shipRes?.data?._id || !payRes?.data?._id) {
+        throw new Error("Tạo vận chuyển/thanh toán không thành công");
       }
-    } else {
-      message.error("You need to login to order");
+
+      // 3) Gắn vào order (song song)
+      await Promise.all([
+        createOrderAPI("ADD-SHIPPING", {
+          OrderID: orderId,
+          shippingID: shipRes.data._id,
+        }),
+        createOrderAPI("ADD-PAYMENT", {
+          OrderID: orderId,
+          paymentID: payRes.data._id,
+        }),
+      ]);
+
+      // 4) Lấy lại order đầy đủ
+      const complete = await getCurrentOrderAPI(user._id);
+      const targetOrder = complete?.data;
+      if (!targetOrder)
+        throw new Error("Không tải được đơn hàng sau khi cập nhật");
+
+      // 5) Cập nhật tồn kho (khuyến nghị: dời vào BE)
+      await Promise.all(
+        (targetOrder.items || []).map((item) => {
+          const current = item.productInfo.stock_quantity ?? 0;
+          const newQty = Math.max(0, current - item.quantity);
+          return updateProductAPI({
+            id: item.productInfo._id,
+            stock_quantity: newQty,
+          });
+        })
+      );
+
+      // 6) Trạng thái đơn
+      const isOnline =
+        targetOrder?.payment?.method === "momo" ||
+        targetOrder?.payment?.method === "vnpay";
+      await updateOrderAPI({
+        id: targetOrder._id,
+        status: "processing",
+      });
+
+      // 7) Thanh toán online
+      if (isOnline) {
+        const data = {
+          amount: targetOrder.total_amount,
+          orderInfo: targetOrder.payment._id,
+        };
+        const paySession = await createPaymentOnline(data);
+        if (paySession?.status === true && paySession?.payUrl) {
+          // cập nhật payment (đúng ID theo order hiện tại)
+          await updatePaymentAPI(targetOrder.payment._id);
+          await refetchCart(); // dọn giỏ trước khi redirect
+          window.location.href = paySession.payUrl;
+          return; // dừng ở đây
+        } else {
+          throw new Error("Tạo phiên thanh toán thất bại");
+        }
+      }
+
+      // 8) COD
+      await refetchCart();
+      message.success("Đặt hàng thành công!");
+      navigate("/order-success");
+    } catch (err) {
+      console.error(err);
+      message.error(err?.message || "Có lỗi khi xử lý đơn hàng");
+    } finally {
+      hide();
     }
   };
+
   useEffect(() => {
     if (user && user._id) {
       const fetchOrder = async () => {
         try {
-          const res = await getOrderAPI(user._id);
+          const res = await getCurrentOrderAPI(user._id);
           if (res && res.EC === 0) {
-            setOrderCart(res.data.find((order) => order.status === "none"));
+            setOrderCart(res.data);
           }
         } catch (error) {
           console.log(error);
