@@ -10,10 +10,15 @@ const MyOrderPage = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (user._id) {
+      if (user?._id) {
         const res = await getOrderAPI(user._id);
         if (res && res.EC === 0) {
-          setListOrder(res?.data);
+          // normalize to always have a payment object
+          const orders = res.data.map((order) => ({
+            ...order,
+            payment: order.payment || { status: "unpaid", method: "momo" },
+          }));
+          setListOrder(orders);
         }
       }
     };
@@ -35,9 +40,7 @@ const MyOrderPage = () => {
       // 3. Update order với payment mới
       const updateRes = await updateOrderAPI({
         id: order._id,
-        payment: {
-          _id: newPayment._id,
-        },
+        payment: { _id: newPayment._id },
       });
       if (!updateRes || updateRes.EC !== 0) {
         throw new Error("Không cập nhật được order với payment mới");
@@ -60,8 +63,9 @@ const MyOrderPage = () => {
       alert("Có lỗi khi xử lý thanh toán lại!");
     }
   };
+
   if (!listOrder) {
-    return <div>Fetching data</div>;
+    return <div>Fetching data...</div>;
   }
 
   return (
@@ -113,18 +117,20 @@ const MyOrderPage = () => {
                       {/* Products */}
                       <td className="px-4 py-3">
                         <div className="space-y-1">
-                          {item?.items.map((it, idx) => (
+                          {item?.items?.map((it, idx) => (
                             <div
                               key={idx}
                               className="flex items-center gap-2 text-gray-700"
                             >
                               <span>
-                                {it.productInfo.name} x {it.quantity}
+                                {it?.productInfo?.name} x {it?.quantity}
                               </span>
-                              <div
-                                className="w-4 h-4 rounded-full border border-gray-300"
-                                style={{ backgroundColor: it.color }}
-                              ></div>
+                              {it?.color && (
+                                <div
+                                  className="w-4 h-4 rounded-full border border-gray-300"
+                                  style={{ backgroundColor: it.color }}
+                                ></div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -132,12 +138,14 @@ const MyOrderPage = () => {
 
                       {/* Date */}
                       <td className="px-4 py-3 text-gray-600">
-                        {new Date(item.createdAt).toLocaleString()}
+                        {item.createdAt
+                          ? new Date(item.createdAt).toLocaleString()
+                          : "--"}
                       </td>
 
                       {/* Total */}
                       <td className="px-4 py-3 font-semibold text-gray-900">
-                        {item.total_amount.toLocaleString()} ₫
+                        {item.total_amount?.toLocaleString()} ₫
                       </td>
 
                       {/* Status */}
@@ -159,18 +167,18 @@ const MyOrderPage = () => {
                       <td className="px-4 py-3">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.payment.status === "paid"
+                            item.payment?.status === "paid"
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {item.payment.status}
+                          {item.payment?.status || "unpaid"}
                         </span>
                       </td>
 
                       {/* Action */}
                       <td className="px-4 py-3">
-                        {item.payment.status === "paid" ? (
+                        {item.payment?.status === "paid" ? (
                           <button
                             disabled
                             className="px-3 py-1 text-xs rounded bg-gray-200 text-gray-500 cursor-not-allowed"
