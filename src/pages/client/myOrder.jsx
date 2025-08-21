@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useCurrentApp } from "../../components/context/app.context";
-import { getOrderAPI } from "../../services/api.order";
+import { getOrderAPI, updateOrderAPI } from "../../services/api.order";
+import { createPaymentAPI } from "../../services/api.payment";
+import { createPaymentOnline } from "../../services/momo.service";
 
 const MyOrderPage = () => {
   const { user } = useCurrentApp();
@@ -17,6 +19,47 @@ const MyOrderPage = () => {
     };
     fetchOrder();
   }, [user]);
+
+  const handlePayment = async (order) => {
+    try {
+      // 1. Lấy method từ payment cũ
+      const method = order.payment?.method || "momo";
+
+      // 2. Tạo payment mới (chỉ cần method)
+      const newPaymentRes = await createPaymentAPI({ method });
+      if (!newPaymentRes || newPaymentRes.EC !== 0) {
+        throw new Error("Không tạo được payment mới");
+      }
+      const newPayment = newPaymentRes.data;
+
+      // 3. Update order với payment mới
+      const updateRes = await updateOrderAPI({
+        id: order._id,
+        payment: {
+          _id: newPayment._id,
+        },
+      });
+      if (!updateRes || updateRes.EC !== 0) {
+        throw new Error("Không cập nhật được order với payment mới");
+      }
+
+      // 4. Gọi thanh toán online
+      const data = {
+        amount: order.total_amount,
+        orderInfo: newPayment._id, // dùng paymentId mới
+      };
+      const paySession = await createPaymentOnline(data);
+
+      if (paySession?.status === true && paySession?.payUrl) {
+        window.location.href = paySession.payUrl;
+      } else {
+        throw new Error("Tạo phiên thanh toán thất bại");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Có lỗi khi xử lý thanh toán lại!");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-10 px-4">
@@ -39,6 +82,7 @@ const MyOrderPage = () => {
                   <th className="px-4 py-3">Total</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Payment</th>
+                  <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,7 +97,7 @@ const MyOrderPage = () => {
                         {index + 1}
                       </td>
 
-                      {/* Order ID rút gọn */}
+                      {/* Order ID */}
                       <td className="px-4 py-3">
                         <span
                           className="font-mono text-blue-600 cursor-pointer"
@@ -119,6 +163,25 @@ const MyOrderPage = () => {
                         >
                           {item.payment.status}
                         </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="px-4 py-3">
+                        {item.payment.status === "paid" ? (
+                          <button
+                            disabled
+                            className="px-3 py-1 text-xs rounded bg-gray-200 text-gray-500 cursor-not-allowed"
+                          >
+                            SUCCESS
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handlePayment(item)}
+                            className="cursor-pointer px-3 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+                          >
+                            PAY NOW
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
