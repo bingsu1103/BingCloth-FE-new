@@ -1,61 +1,20 @@
 import { Drawer, InputNumber, message } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { createOrderAPI, getCurrentOrderAPI } from "../../services/api.order";
 import { useCurrentApp } from "../context/app.context";
+import { createOrderAPI } from "../../services/api.order";
 import { deleteItemAPI, updateItemAPI } from "../../services/api.item";
 import { FaTrashCan } from "react-icons/fa6";
 
 const CartDrawer = ({ open, setOpen }) => {
-  const { user, isAuthenticated, refetchCart } = useCurrentApp();
-  const [cartItems, setCartItems] = useState([]);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { cartItems, orderId, refetchCart } = useCurrentApp();
   const navigate = useNavigate();
 
   const onClose = async () => {
-    handleCheckout();
+    await refetchCart();
     setOpen(false);
   };
 
-  useEffect(() => {
-    if (!open) return;
-    if (!isAuthenticated || !user?._id) {
-      setCartItems([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await getCurrentOrderAPI(user._id);
-        if (res?.EC === 0) {
-          const cartOrder = res.data;
-          console.log("cart order", cartOrder);
-
-          if (!cancelled)
-            setCartItems(
-              Array.isArray(cartOrder?.items) ? cartOrder.items : []
-            );
-        } else {
-          if (!cancelled) setCartItems([]);
-        }
-      } catch (err) {
-        console.error(err);
-        if (!cancelled) setCartItems([]);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, isAuthenticated, user?._id, refreshKey]);
-
-  useEffect(() => {
-    console.log("cartItems updated", cartItems);
-  }, [cartItems]);
-
-  const handleQuantityChange = (value, _id) => {
+  const handleQuantityChange = async (value, _id) => {
     const item = cartItems.find((i) => i._id === _id);
     if (!item) return;
     if (value > item.productInfo?.stock_quantity) {
@@ -63,28 +22,25 @@ const CartDrawer = ({ open, setOpen }) => {
       return;
     }
 
-    setCartItems((prev) =>
-      prev.map((i) => (i._id === _id ? { ...i, quantity: value } : i))
-    );
-
-    updateItemAPI({ id: _id, quantity: value })
-      .then(() => {
-        refetchCart(); // sync lại từ server
-      })
-      .catch(() => {
-        message.error("Failed to update quantity");
-      });
+    try {
+      await updateItemAPI({ id: _id, quantity: value });
+      await refetchCart();
+    } catch {
+      message.error("Failed to update quantity");
+    }
   };
 
   const handleCheckout = async () => {
     try {
+      // đồng bộ số lượng giỏ hàng
       for (const item of cartItems) {
         await updateItemAPI({ id: item._id, quantity: item.quantity });
-        const res = await getCurrentOrderAPI(user._id);
-        await createOrderAPI("UPDATE-TOTAL", { OrderID: res?.data._id });
-        refetchCart();
       }
-
+      // cập nhật tổng tiền
+      if (orderId) {
+        await createOrderAPI("UPDATE-TOTAL", { OrderID: orderId });
+      }
+      await refetchCart();
       navigate("/checkout");
       setOpen(false);
     } catch (error) {
@@ -93,20 +49,14 @@ const CartDrawer = ({ open, setOpen }) => {
     }
   };
 
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
   const handleDeleteItem = async (id) => {
     try {
-      const order = await getCurrentOrderAPI(user._id);
-      const currentOrder = order?.data;
-      if (!currentOrder?._id) {
+      if (!orderId) {
         return message.error("Order not found.");
       }
 
       const updatedOrder = await createOrderAPI("REMOVE-ITEM", {
-        OrderID: currentOrder._id,
+        OrderID: orderId,
         arrItem: [id],
       });
 
@@ -115,20 +65,24 @@ const CartDrawer = ({ open, setOpen }) => {
       }
 
       const res = await deleteItemAPI(id);
-
       if (!res || res.EC !== 0) {
         return message.warning(
           "Removed from order, but failed to delete item."
         );
       }
-      setCartItems((prev) => prev.filter((item) => item._id !== id));
-      refetchCart();
+
+      await refetchCart();
       message.success("Item removed successfully!");
     } catch (error) {
       console.error("Remove item failed:", error);
       message.error("Remove item failed.");
     }
   };
+
+  const total = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   return (
     <Drawer
@@ -157,7 +111,7 @@ const CartDrawer = ({ open, setOpen }) => {
                     className="bin"
                     onClick={() => handleDeleteItem(item._id)}
                   >
-                    <FaTrashCan className="text-2xl" />
+                    <FaTrashCan className="text-2xl cursor-pointer" />
                   </div>
                   <div className="relative">
                     <img

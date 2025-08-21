@@ -12,7 +12,7 @@ import {
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import { getAProductAPI } from "../../services/api.product";
-import { createOrderAPI, getCurrentOrderAPI } from "../../services/api.order";
+import { createOrderAPI } from "../../services/api.order";
 import { useCurrentApp } from "../../components/context/app.context";
 import { createItemAPI, updateItemAPI } from "../../services/api.item";
 import { AiFillHeart } from "react-icons/ai";
@@ -25,7 +25,8 @@ const ViewDetailProductPage = () => {
   const [form] = Form.useForm();
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated, refetchCart } = useCurrentApp();
+  const { user, isAuthenticated, refetchCart, orderId, cartItems } =
+    useCurrentApp();
 
   const [product, setProduct] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -88,7 +89,7 @@ const ViewDetailProductPage = () => {
     });
   }, [item, form]);
 
-  // ---------- CORE: đồng bộ item hiện tại vào Order & update total ----------
+  // ---------- CORE: đồng bộ item hiện tại vào Order ----------
   const upsertItemIntoOrder = async () => {
     if (!isAuthenticated) {
       message.error("You need to login first");
@@ -112,25 +113,23 @@ const ViewDetailProductPage = () => {
       return null;
     }
 
-    // 1) Lấy/khởi tạo order hiện tại
-    const res = await getCurrentOrderAPI(user._id);
-    let cart = res?.data;
-    if (!cart?._id) {
-      await createOrderAPI("EMPTY-ORDER", {
+    let currentOrderId = orderId;
+    if (!currentOrderId) {
+      // nếu chưa có order thì tạo mới
+      const newOrder = await createOrderAPI("EMPTY-ORDER", {
         userInfo: user._id,
         total_amount: 0,
       });
-      const again = await getCurrentOrderAPI(user._id);
-      cart = again?.data;
-    }
-    const orderID = cart?._id;
-    if (!orderID) {
-      message.error("Cannot create/load current order");
-      return null;
+      if (!newOrder || newOrder.EC !== 0) {
+        message.error("Cannot create order");
+        return null;
+      }
+      await refetchCart();
+      currentOrderId = newOrder.data?._id;
     }
 
-    // 2) Tìm item trùng (cùng product + size + color)
-    const existing = cart?.items?.find(
+    // 2) Tìm item trùng (cùng product + size + color) trong cartItems context
+    const existing = cartItems?.find(
       (i) =>
         (i.productInfo?._id || i.productInfo) === product._id &&
         i.size === item.size &&
@@ -143,7 +142,6 @@ const ViewDetailProductPage = () => {
         message.error("Not enough stock");
         return null;
       }
-      // luôn ghi lại price hiện tại để tính total đúng
       await updateItemAPI({
         id: existing._id,
         quantity: newQty,
@@ -160,7 +158,7 @@ const ViewDetailProductPage = () => {
       const itemID = created?.data?._id;
       if (itemID) {
         await createOrderAPI("ADD-ITEM", {
-          OrderID: orderID,
+          OrderID: currentOrderId,
           arrItem: [itemID],
         });
       } else {
@@ -169,20 +167,18 @@ const ViewDetailProductPage = () => {
       }
     }
 
-    // 3) Cập nhật tổng tiền theo giá hiện tại
-    await createOrderAPI("UPDATE-TOTAL", { OrderID: orderID });
-
-    return orderID;
+    // 3) Cập nhật tổng tiền
+    await createOrderAPI("UPDATE-TOTAL", { OrderID: currentOrderId });
+    await refetchCart();
+    return currentOrderId;
   };
 
-  // ---- Add to cart (submit form)
+  // ---- Add to cart
   const handleAddToCart = async () => {
     const hide = message.loading("Adding to cart...");
     try {
-      const orderID = await upsertItemIntoOrder();
-      if (!orderID) return;
-      await refetchCart?.();
-      message.success("Added to cart!");
+      const success = await upsertItemIntoOrder();
+      if (success) message.success("Added to cart!");
     } catch (e) {
       console.error(e);
       message.error("Add to cart failed");
@@ -199,10 +195,8 @@ const ViewDetailProductPage = () => {
     }
     const hide = message.loading("Preparing checkout...");
     try {
-      const orderID = await upsertItemIntoOrder();
-      if (!orderID) return;
-      await refetchCart?.();
-      navigate("/checkout");
+      const success = await upsertItemIntoOrder();
+      if (success) navigate("/checkout");
     } catch (e) {
       console.error(e);
       message.error("Cannot proceed to checkout");
@@ -210,11 +204,10 @@ const ViewDetailProductPage = () => {
       hide();
     }
   };
-
   if (!product) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <Spin size="large" tip="Loading..." />
+        <Spin size="large" tip="Loading product..." />
       </div>
     );
   }
@@ -234,7 +227,7 @@ const ViewDetailProductPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* LEFT: Gallery */}
           <div className="bg-white rounded-2xl shadow-md p-4 md:p-6">
-            {product.images?.length > 1 ? (
+            {product?.images?.length > 1 ? (
               <div className="relative">
                 <Carousel
                   dots
@@ -242,7 +235,7 @@ const ViewDetailProductPage = () => {
                   nextArrow={<SlickButtonFix type="next" />}
                   prevArrow={<SlickButtonFix type="prev" />}
                 >
-                  {product.images.map((img, index) => (
+                  {product?.images?.map((img, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-center"
@@ -262,25 +255,13 @@ const ViewDetailProductPage = () => {
             ) : (
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                 <img
-                  src={product.images?.[0]}
-                  alt={product.name}
+                  src={product?.images?.[0]}
+                  alt={product?.name || "Product"}
                   className="absolute inset-0 w-full h-full object-contain"
                   loading="lazy"
                 />
               </div>
             )}
-
-            <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs md:text-sm">
-              <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
-                Free ship order 500k
-              </div>
-              <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
-                7-day return
-              </div>
-              <div className="rounded-lg bg-gray-50 py-2 border border-gray-100 text-black font-bold">
-                Security payment
-              </div>
-            </div>
           </div>
 
           {/* RIGHT: Summary / Form */}

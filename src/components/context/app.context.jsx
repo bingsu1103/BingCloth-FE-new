@@ -13,18 +13,27 @@ const AppContext = createContext(null);
 export const AppContextProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+
+  // giữ nguyên nhưng bổ sung orderId
+  const [orderId, setOrderId] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [cartUpdated, setCartUpdated] = useState(false);
+
   const [theme, setTheme] = useState(() => {
     return localStorage?.getItem("theme") ?? "dark";
   });
 
+  // fetch account
   useEffect(() => {
     const fetchAccount = async () => {
-      const res = await fetchAccountAPI();
-      if (res.data) {
-        setUser(res.data.user);
-        setIsAuthenticated(true);
+      try {
+        const res = await fetchAccountAPI();
+        if (res.data) {
+          setUser(res.data.user);
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error("Fetch account failed:", err);
       }
     };
     fetchAccount();
@@ -34,11 +43,14 @@ export const AppContextProvider = ({ children }) => {
     if (user?._id) {
       try {
         const res = await getCurrentOrderAPI(user._id);
-        if (res?.EC === 0) {
+        if (res?.EC === 0 && res?.data) {
           const cartOrder = res.data;
-          setCartItems(cartOrder?.items || []);
+          setOrderId(cartOrder._id || null);
+          setCartItems(cartOrder.items || []);
           setCartUpdated((prev) => !prev);
+          return cartOrder;
         } else {
+          setOrderId(null);
           setCartItems([]);
         }
       } catch (err) {
@@ -62,6 +74,7 @@ export const AppContextProvider = ({ children }) => {
         setIsAuthenticated,
         user,
         setUser,
+        orderId,
         cartItems,
         setCartItems,
         refetchCart,
