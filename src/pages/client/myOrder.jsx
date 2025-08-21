@@ -60,6 +60,9 @@ const MyOrderPage = () => {
       alert("Có lỗi khi xử lý thanh toán lại!");
     }
   };
+  if (!listOrder) {
+    return <div>Fetching data</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-10 px-4">
