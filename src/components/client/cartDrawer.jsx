@@ -12,7 +12,8 @@ const CartDrawer = ({ open, setOpen }) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
 
-  const onClose = () => {
+  const onClose = async () => {
+    handleCheckout();
     setOpen(false);
   };
 
@@ -62,12 +63,10 @@ const CartDrawer = ({ open, setOpen }) => {
       return;
     }
 
-    // Update local state ngay lập tức để UI responsive
     setCartItems((prev) =>
       prev.map((i) => (i._id === _id ? { ...i, quantity: value } : i))
     );
 
-    // Sau đó gọi API
     updateItemAPI({ id: _id, quantity: value })
       .then(() => {
         refetchCart(); // sync lại từ server
